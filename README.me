@@ -1,0 +1,112 @@
+===========================================================================================================================================================================
+This repository stores the code in Java for the optimization problem "The fluvial transport operation design problem with an electric boat" solved via a two-stage simulation-based branch-and-bound algorithm. This problem was researched within the academic alliance ENERGETICA 2030 from the Colombia Científica initiative, funded by The World Bank through the call 778-2017 Scientific Ecosystems.
+===========================================================================================================================================================================
+Author: Camilo Vélez
+        cvelezg10@eafit.edu.co
+        Departamento de Ingeniería de Producción, Universidad EAFIT
+        
+Author: Alejandro Montoya
+        jmonto36@eafit.edu.co
+        Departamento de Ingeniería de Producción, Universidad EAFIT
+===========================================================================================================================================================================
+The code can be executed either by running the docker-compose or the Main.java file, with the inputs been supplied in a json file which name must be specified. To use the docker-compose, the name of the json file must be provided in the Dockerfile. To run it via the Main.java, the name of the json file must be supplied as the one and only argument.
+
+The following is an explanation of each of the keys of the input json file. We added two different sample input json files (BaseInstace.json and SmallInstance.json) inside the ConfigurationFiles folder.
+
+- batteryBestCSCaseBound: boolean value that indicates if the pruning rule b1 is active
+- batteryCostBound: boolean value that indicates if the pruning rule b2 is active
+- csDistanceCSBound: boolean value that indicates if the pruning rule n1 is active
+- csCostBound: boolean value that indicates if the pruning rule c1 is active
+- speedDistanceCSBound: boolean value that indicates if the pruning rule s1 is active
+- speedTripsTimeBound: boolean value that indicates if the pruning rule s2 is active
+- departureTimeBetweenTripsBound: boolean value that indicates if the pruning rule h1 is active
+- departureMaxTripsBound: boolean value that indicates if the pruning rule h2 is active
+
+- batteryCapacities: an array of the battery capacities (in kWh) to evaluate
+- pvModulesPerArray: number of PV panels per array
+- pvArrays: an array of the numbers of PV arrays to evaluate
+- speeds: array of speeds of the EB (in km/h) to evaluate
+- departureTreeDeltaInMin: the time delta (in minutes) to evaluate for the schedule of the departure hours 
+- minimumTrips: minimum number of daily round trips to evaluate
+- maxTrips: maximum number of daily round trips to evaluate
+
+- nodes: number of nodes that must be visited by the EB. Unlike nodes in the paper, these ones are repeated during the return trip (i.e. each location but the one in which the otward trip ends and the return one starts is counted as 2 nodes)
+- distances: an array of distances (in km) between the nodes. The first position of the array must be 0.
+
+- ebMinSOC: minimum evergy level that the EB's battery may have at any given time for a solution to be feasible (expressed in a percentage between 0 and 1)
+- essNominalSoC: nominal energy level for the ESSs (expressed in a percentage between 0 and 1)
+- essMinSoC: minimum evergy level for the ESSs (expressed in a percentage between 0 and 1) 
+
+- riverSpeed: average speed of the river current (in km/h)
+- riverFlowsInFavorDuringFirstHalf: a boolean value that indicates if the river current is in favor of the EB during the outward trip (true) or the return one (false) 
+
+- baseChargingPower: an array of charging powers (in kW) of the piecewise linear approximation that serves as the base to calculate (via cross multiplication) the actual charging powers of the instance
+- breakPoints: an array of the break points (in a percentage between 0 and 1) to consider for the piecewise linear approximation of the charging function
+
+- batteryModule: a json object that stores the capacity (in kWh) and cost (in usd) of a battery module of the EB's battery
+- essModule: a json object that stores the capacity (in kWh) and cost (in usd) of a battery module of the ESS
+- pvModule: a json object that stores the area (in square meters, the actual attribute is named sqrM), efficiency (in a percentage between 0 and 1), peak power (in kW) and cost (usd) of a PV panel.
+
+- portClosingHour: daily hor in which the main port closes (in military time)
+- portOpeningHour: daily hor in which the main port opens (in military time)
+
+- csCostIntercept: the intercept with the X axis (in a graph of CS cost vs charging power) of the linear regression used to estimate the cost of a CS given by its charging power
+- csCostSlope: the slope (in usd/kWh) of the linear regression used to estimate the cost of a CS given by its charging power
+- csAnualMaintenance: an array of the annual maintenance cost (in usd) of a CS given by whether it is a PVGrid CS (position 0 of the array) or an only Grid connected one (position 1 of the array) CS. The cost remains the same in each year
+- converterInputPower: input power (in kW) that a converter withstands, which used for calculating the number of required converters given by the PV arrays.
+- converterCost: cost of a converter (in usd).
+
+- energyPrices: an array of the estimated cost of energy to purchase from the grid (in usd/kWh) in each year brought to present value. The array must have have a length equal to the number of simulated years
+- usdPerkWhDueToCO2: an estimated cost (in usd/kWh) of a tax charged for the use of hydrocarbons (may be set to 0 if such tax does not apply).
+
+- outageDurationMuMinutes: an array of the average duration (in minutes) of power outages in each location (locations are not counted twice).
+- timeToFollowingOutageMuMinutes: an array of the average time (in minutes) between power outages in each location (locations are not counted twice).
+
+- consumptionArray: an array of energy consumptions (in kWh) to traverse the distance between nodes given by the speed and weight of the EB. It must be filled as a one dimensional array per battery capacity (in order to calculate its weight), speed, number of passengers and segment of the route (accounting for dthe river current). An example of how to fill it out is provided in the ConfigurationFiles folder. It is loaded in this way to make it easier to test different configuration of the parameters without having to change the consumptio array.
+- consumptionGenerationMinBattery: the lower end of the battery capacity (in kWh) with which consumptionArray was calculated. It is only used as a reference point for the code.
+- consumptionGenerationMaxBattery: the upper end of the battery capacity (in kWh) with which consumptionArray was calculated. It is only used as a reference point for the code.
+- consumptionGenerationMinSpeed: the lower end of the speed (in km/h) with which consumptionArray was calculated. It is only used as a reference point for the code.
+- consumptionGenerationMaxSpeed: the upper end of the speed (in km/h) with which consumptionArray was calculated. It is only used as a reference point for the code.
+- consumptionGenerationMinPassengers: the lower end of the number of passenger configurations with which consumptionArray was calculated. It is only used as a reference point for the code.
+- consumptionGenerationMaxPassengers: the upper end of the number of passenger configurations with which consumptionArray was calculated. It is only used as a reference point for the code.
+
+- irradianceDataPeriod: period of the solar irradiance data (in minutes)
+- solarIrradiance: an array of solar irradiance data (in kW/m^2) per moment of the day given by the irradianceDataPeriod. It must be filled as a one dimensional array per year, month, day and hour of the day (an example is provided in the ConfigurationFiles folder).
+- daysPerYear: days to simulate per year (in case a short and quick test was to be run). Leap years can not be considered (i.e. daysPerYear must always be less than or equal to 365).
+- startingYear: first year to be simulated (for the solar irradiance).
+- finalYear: last year to be simulated (for the solar irradiance).
+- firstYearInTimeSeries: first year for which the solar irradiance data was gathered (it is only used by the code as a reference point).
+
+- maxPassengers: maximum number of passengers that may travel at a given time in the EB.
+- maxAveragePassengerWaitingTime: maximum time (in h) that a passenger waits in a port to board the EB.
+- minPercentageOfPeopleToTransport: minimum percentage (in a number from 0 to 1) of candidate passengers at any port that must be transported per day to keep the desired service quality 
+
+- muTimeWindows: hours of the day (in military hour) that define the limits of the time windows for the passenger arrivals.
+- passengerMuMainPort: array of average time (in hours) between candidate passengers arrivals in the main port (Magangue's) per time window.
+- passengerMuMidPort: array of average time (in hours) between candidate passengers arrivals in the secondary port (Pinillos) per time window.
+
+- significance: significance level (in a percentage from 0 to 1) for the percentage of simulated days that must be feasible for a replication to be accepted 
+- replications: number of replications per candidate solution
+- replicationsSignificance: significance level (in a percentage from 0 to 1) for the percentage of replications that must be feasible for a solution to be accepted
+
+"lowIrradianceAlways": false,
+
+===========================================================================================================================================================================
+The solution is written as another json file named as "solution"+ the name of the input file, and is stored inside the solutions folder.
+
+The following is an explanation of the keys of the solution json file
+
+- isFeasible: boolean value indicating whether the solution was feasible.
+
+- cost: total cost of the solution (in usd). The cost of the energy to purchase from the grid is the average among all replications.
+- investmentCost: investment cost of the solution (in usd).
+- gridEnergyCost: cost of the energy to purchase from the grid (in usd). It is the average among all replications.
+
+- ebSelectedBattery: selected capacity (in kWh) for the EB's battery.
+- csList: an array of json objects that describe the installed CSs. The objects describe the type of CS (PVGrid or Grid), number of installed PV arrays (0 for a Grid only CS), ESS capacity (in kWh), charging power (binary attribute equal to 0 for the 0.5C charging power and 1 for the 1C one) and the location of the CS (it is stored in an attribute called id).
+- forwardSpeed: the selected speed (in km/h) for the outward trips.
+- returnSpeed: the selected speed (in km/h) for the return trips.
+- scheduleList: an array of the selected departure hours (in military time) of the EB from the main port.
+
+- percentageOfPeopleWhoBoard: an average among all replications of the percentage of people who boarded the EB from the total number of people who visited a port.
+- averageWaitingTime: an average among all replications of the mean waiting time (in hours) in either port of the people who boarded the EB.

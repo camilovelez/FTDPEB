@@ -1,0 +1,8 @@
+*.metadata/
+*.pptx
+*.class
+*.zip
+*.jpg
+*.docx
+__pycache__/
+Graficas paper
