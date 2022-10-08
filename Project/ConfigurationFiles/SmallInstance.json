@@ -64,9 +64,6 @@
   "finalYear": 2017,
   "firstYearInTimeSeries": 1998,
   "significance": 0.1,
-  "csTypes": [
-    "Grid"
-  ],
   "csCostIntercept": 22843,
   "csCostSlope": 40.857,
   "csAnnualMaintenance": [
